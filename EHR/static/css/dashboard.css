@@ -1,0 +1,137 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Light gray background */
+    margin: 0;
+    padding: 0;
+}
+
+/* Navbar Styles */
+.navbar {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.navbar-nav .nav-link {
+    font-size: 1rem;
+    margin-right: 15px;
+    color: #ffffff;
+    transition: color 0.3s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #cfd2d6; /* Light gray on hover */
+}
+
+/* Welcome Section */
+h1 {
+    color: #343a40; /* Dark gray */
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+p {
+    color: #6c757d; /* Medium gray */
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+}
+
+/* Add Patient Button */
+.btn-primary {
+    background-color: #007bff; /* Bootstrap primary blue */
+    border-color: #007bff;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Table Styles */
+.table {
+    background-color: #ffffff;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+    background-color: #343a40; /* Dark gray header */
+    color: #ffffff; /* White text */
+    text-align: center;
+}
+
+.table td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #f8f9fa; /* Light gray for alternate rows */
+}
+
+.table tbody tr:hover {
+    background-color: #e9ecef; /* Slightly darker gray on hover */
+}
+
+/* Action Buttons in Table */
+.table .btn {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.table .btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: #ffffff;
+}
+
+.table .btn-info:hover {
+    background-color: #117a8b;
+}
+
+.table .btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+.table .btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.table .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #ffffff;
+}
+
+.table .btn-danger:hover {
+    background-color: #bd2130;
+}
+
+/* Footer Section */
+.footer {
+    background-color: #343a40;
+    color: #ffffff;
+    padding: 10px 0;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.footer a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.footer a:hover {
+    color: #ffc107; /* Highlight on hover */
+}

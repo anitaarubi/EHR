@@ -1,0 +1,69 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Light gray background */
+    margin: 0;
+    padding: 0;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for the form card */
+    border-radius: 10px;
+}
+
+/* Card Header */
+.card-header {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Form Labels */
+.form-label {
+    font-weight: 500;
+    color: #495057; /* Dark gray */
+}
+
+/* Radio Buttons */
+.form-check-input:checked {
+    background-color: #198754; /* Match success button color */
+    border-color: #198754;
+}
+
+.form-check-label {
+    margin-right: 20px;
+    font-size: 1rem;
+    color: #495057;
+}
+
+/* Submit Button */
+.btn-success {
+    width: 150px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-success:hover {
+    background-color: #146c43; /* Darker green on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Cancel Button */
+.btn-secondary {
+    width: 150px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #6c757d; /* Slightly darker gray */
+}
+
+/* Footer */
+.footer {
+    background-color: #343a40;
+    color: #ffffff;
+    text-align: center;
+    padding: 10px 0;
+    margin-top: 30px;
+}

@@ -1,0 +1,171 @@
+/* General Body Styling */
+body {
+    background-color: #f5f5f5;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+}
+
+/* Navbar Styling */
+.navbar {
+    background-color: #5967b6;
+}
+
+.navbar .navbar-brand i {
+    color: white;
+    font-size: 1.5rem;
+}
+
+.navbar .navbar-brand span {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.navbar .nav-link {
+    color: #fff !important;
+    font-size: 1.1rem;
+}
+
+.navbar .nav-link:hover {
+    color: #ffd700 !important;
+}
+
+/* Hero Section Styling */
+.hero-section {
+    background-color: #5967b6;
+    color: white;
+    padding: 120px 20px;
+    text-align: center;
+    border-bottom: 4px solid #00b894;
+}
+
+.hero-section h1 {
+    font-size: 3.8rem;
+    font-weight: 600;
+}
+
+.hero-section p {
+    font-size: 1.3rem;
+    margin-top: 20px;
+}
+
+.buttons a {
+    margin: 0 15px;
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    border-radius: 30px;
+    transition: all 0.3s;
+}
+
+.buttons a:hover {
+    background-color: #f39c12;
+    color: white;
+}
+
+/* About & Services Section Styling */
+.info-section {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    margin-bottom: 30px;
+}
+
+.info-section h2 {
+    color: #5967b6;
+    font-size: 2.2rem;
+    font-weight: 600;
+}
+
+.info-section p, .info-section ul {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.info-section ul {
+    padding-left: 20px;
+}
+
+.info-section ul li {
+    margin-bottom: 10px;
+}
+
+/* Flexbox Layout for Parallel Sections */
+.about-services {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    margin-top: 50px;
+}
+
+.about-services .info-section {
+    flex: 1;
+    min-width: 45%;
+}
+
+/* Contact Section Styling */
+#contact {
+    background-color: #ffffff;
+    padding: 60px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 40px;
+    text-align: center;
+}
+
+#contact h2 {
+    color: #5967b6;
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+#contact p {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.contact-info {
+    text-align: center;
+}
+
+.contact-info h3 {
+    font-size: 1.8rem;
+    color: #5967b6;
+    margin-bottom: 20px;
+}
+
+.contact-info p {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.contact-info a {
+    color: #5967b6;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.contact-info a:hover {
+    text-decoration: underline;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #2c3e50;
+    color: white;
+    padding: 30px 0;
+    margin-top: 60px;
+}
+
+footer a {
+    color: #ffd700;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Hover Eff

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/view_ehr.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <!-- RubiMed Logo and Heart Icon -->
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-heartbeat"></i>
+            <span class="ms-2">RubiMed</span>
+        </a>
+        <div class="d-flex">
+            <a href="/dashboard" class="btn btn-secondary me-2">Back</a>
+            <form action="/logout" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to log out?')">
+                <button type="submit" class="btn btn-danger">Logout</button>
+            </form>
+            
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h1 class="text-center">Welcome, Doctor!</h1>
+    <p class="text-center">Streamline your workflow and manage your patient's EHR records with ease.</p>
+
+    <!-- Patient Information Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            {% if ehr_records[0] %}
+            <h4>{{ patient_first_name }}</h4>
+            <p>Patient ID: {{ patient_id }}</p>
+            <p>Patient First name: {{ ehr_records[0].first_name }}</p>
+            <p>Patient Last name: {{ ehr_records[0].last_name }}</p>
+            <p>Patient DOB: {{ ehr_records[0].date_of_birth }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Add EHR Record Button -->
+    <div class="text-end mb-3">
+        <a href="/add_ehr/{{ patient_id }}" class="btn btn-primary">Add New Record</a>
+    </div>
+    
+    <!-- EHR Records Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Diagnosis</th>
+                    <th scope="col">Medications</th>
+                    <th scope="col">Vital Signs</th>
+                    <th scope="col">Immunization Status</th>
+                    <th scope="col">Medical History</th>
+                    <th scope="col">Test Results</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if ehr_records %}
+                    {% for record in ehr_records %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ record.diagnosis }}</td>
+                            <td>{{ record.medications }}</td>
+                            <td>{{ record.vital_signs }}</td>
+                            <td>{{ record.immunization_status }}</td>
+                            <td>{{ record.medical_history }}</td>
+                            <td>{{ record.test_results }}</td>
+                            <td>{{ record.date }}</td>
+                            <td>
+                                <!-- Edit Button -->
+                                <a href="/edit_ehr/{{ record.id }}" class="btn btn-info btn-sm">Edit</a>
+                                
+                                <!-- Delete Button - Using a Form for POST request -->
+                                <form action="/delete_ehr/{{ record.id }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this record?');">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center">No records found. Add a new record for this patient.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
