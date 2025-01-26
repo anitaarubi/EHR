@@ -4,6 +4,7 @@ Steps to run the code
    - mysql-connector-python
    - werkzeug
    - itsdangerous
+   - yagmail
 2. Database management 
    - Change mysql database credientials to your own.
 3. Start APP
