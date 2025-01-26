@@ -1,7 +1,0 @@
-Improvements:
-- remove leading and trailing spaces from user input
-- forgot password
-- how for the backend to log in with the  user ccrediential 
-- eyes image to see your password
-- logout route 
-- redesign the webpage 
