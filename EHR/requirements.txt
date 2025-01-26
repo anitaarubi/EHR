@@ -1,9 +1,3 @@
-Improvements:
-- remove leading and trailing spaces from user input
-- forgot password
-- eyes image to see your password
-
-
 Steps to run the code 
 1. Install External Libaries
    - flask
@@ -15,3 +9,8 @@ Steps to run the code
 3. Start APP
    -Navigate to the directory where your app.py is located
    -Run the code
+
+Improvements:
+- remove leading and trailing spaces from user input
+- forgot password
+- eyes image to see your password
