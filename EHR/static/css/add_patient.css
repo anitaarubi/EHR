@@ -1,0 +1,75 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #faf8f8; 
+    margin: 0;
+    padding: 0;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    border-radius: 10px;
+}
+
+/* Card Header */
+.card-header {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Form Labels */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Radio Buttons */
+.form-check-input:checked {
+    background-color: #198754; 
+    border-color: #198754;
+}
+
+.form-check-label {
+    margin-right: 20px;
+    font-size: 1rem;
+    color: #495057;
+}
+
+/* Submit Button */
+.btn-success {
+    width: 150px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-success:hover {
+    background-color: #146c43; 
+    transform: translateY(-2px); 
+}
+
+/* Cancel Button */
+.btn-secondary {
+    width: 150px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #7d6c6c;   
+}
+
+/* Footer */
+.footer {
+    background-color: #343a40;
+    color: #ffffff;
+    text-align: center;
+    padding: 10px 0;
+    margin-top: 30px;
+}
+
+
+
+
+
+

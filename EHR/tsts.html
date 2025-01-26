@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Random Password</title>
+</head>
+<body>
+    <h2>Enter the random password</h2>
+    <form method="POST">
+        <label for="random_password">Random Password:</label>
+        <input type="password" id="random_password" name="random_password" required>
+        <button type="submit">Verify</button>
+    </form>
+
+    <p>If you did not receive an email, please check your inbox or try again.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+</body>
+</html>
