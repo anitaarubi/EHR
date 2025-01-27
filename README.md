@@ -38,5 +38,5 @@ Access the application by navigating to http://127.0.0.1:5000/ in your web brows
 - Flask: Web framework for building the app.
 - MySQL: Database for storing patient and doctor data.
 - Werkzeug: Password hashing and security.
-- Gmail SMTP: For sending password reset emails.
+- Yagmail: For sending password reset emails.
 - HTML/CSS/JavaScript: Frontend for the application.
