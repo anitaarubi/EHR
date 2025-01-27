@@ -1,0 +1,14 @@
+Steps to run the code 
+1. Install External Libaries
+   - flask
+   - mysql-connector-python
+   - werkzeug
+   - itsdangerous
+   - yagmail
+
+2. Database management 
+   - Change mysql database credientials to your own.
+   
+3. Start APP
+   -Navigate to the directory where your app.py is located
+   -Run the code
