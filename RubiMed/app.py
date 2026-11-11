@@ -1,29 +1,20 @@
-from flask import Flask, render_template,request,redirect,flash,session, url_for 
+from flask import Flask, abort, render_template, request, redirect, flash, session, url_for
 import mysql.connector
 from werkzeug.security import generate_password_hash,check_password_hash
 from itsdangerous import URLSafeTimedSerializer
 import yagmail
-import os 
+import os
 
-app = Flask(__name__)  #manages the website and keeps track of all pages and decides what page to show.
+app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "local-development-key-change-me")
 
-app.secret_key = os.urandom(24)
-
-
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="Goodlife2021@", #input your own password 
-    database = "EHR_System",
-    auth_plugin='mysql_native_password'
-)
-
-mycursor = db.cursor()
-
-# Create tables if they do not already exist
-mycursor.execute("CREATE DATABASE IF NOT EXISTS EHR_System")
-
-mycursor.execute("USE EHR_System")
+DB_CONFIG = {
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": int(os.getenv("DB_PORT", "3306")),
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "database": os.getenv("DB_NAME", "EHR_System"),
+}
 
 tables = [
     """
@@ -64,14 +55,51 @@ CREATE TABLE IF NOT EXISTS ehr_data (
     """
 ]
 
-for x in tables:
-    mycursor.execute(x)
-db.commit()
+def initialize_database():
+    """Create the configured database and tables when the app starts."""
+    server_config = {key: value for key, value in DB_CONFIG.items() if key != "database"}
+    connection = mysql.connector.connect(**server_config)
+    cursor = connection.cursor()
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_CONFIG['database']}`")
+    cursor.close()
+    connection.close()
 
-app = Flask(__name__)
+    connection = mysql.connector.connect(**DB_CONFIG)
+    cursor = connection.cursor()
+    for statement in tables:
+        cursor.execute(statement)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+
+initialize_database()
+db = mysql.connector.connect(**DB_CONFIG)
 
 # Initialize URLSafeTimedSerializer for generating reset tokens
-serializer = URLSafeTimedSerializer(os.urandom(24))  # Secure random key for token generation
+serializer = URLSafeTimedSerializer(
+    os.getenv("RESET_TOKEN_SECRET", app.config["SECRET_KEY"])
+)
+
+
+@app.before_request
+def require_login():
+    public_endpoints = {
+        "home", "register", "login", "forgot_password", "reset_password", "static"
+    }
+    if request.endpoint not in public_endpoints and "doctor_id" not in session:
+        return redirect(url_for("login"))
+
+
+def patient_belongs_to_doctor(patient_id, doctor_id):
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT id FROM patients WHERE id = %s AND doctor_id = %s",
+        (patient_id, doctor_id),
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    return row is not None
 
 def generate_reset_token(email):
     """Generate a reset password token."""
@@ -120,7 +148,7 @@ def register():
             return redirect("/login")  # Redirect to login page after successful registration
 
         except mysql.connector.Error as err:
-            print(f"Error: {err}") 
+            print(f"Error: {err}")
             return render_template("register.html")  # Shows the form again
 
     # Render registration page on GET request
@@ -133,34 +161,28 @@ def login():
         email = request.form.get('email')  # Username is entered here
         password = request.form.get('password')  # Password is entered here
 
-        print(f"Received email: {email}")  # Debugging: print email received
-        print(f"Received password: {password}")  # Debugging: print password received
 
         try:
             mycursor = db.cursor(dictionary=True)
-            
+
             # Query for doctor by 'username' field in the database (not 'email')
             mycursor.execute("SELECT * FROM doctors WHERE email = %s", (email,))
             doctor = mycursor.fetchone()
-            
-            print(f"Doctor found: {doctor}")  # Debugging: print the result of the doctor found 
+
 
             mycursor.close()
 
             if doctor:
                 # Verify if the password matches the stored hashed password
                 if check_password_hash(doctor['password'], password):
-                    print(f"Password matched for {doctor['username']}")  # Debugging: successful password match
                     session['doctor_id'] = doctor['id']
                     session['username'] = doctor['username']
                     flash("Login successful!", "success")
                     return redirect("/dashboard")
                 else:
-                    print("Password does not match")  # Debugging: password mismatch
                     flash("Invalid username or password.", "danger")
             else:
-                print("Doctor not found")  # Debugging: doctor not found
-            
+                flash("Invalid username or password.", "danger")
             return render_template("login.html")  # Re-render the login page with an error message from flash
 
         except mysql.connector.Error as err:
@@ -171,21 +193,25 @@ def login():
 
 #---------------------------------define the function to send email to user-------------------------------------------------------------------------
 def send_email(email, link):
-    yag = yagmail.SMTP("yourhealthorganization@gmail.com", "dfik grcp kjkv rmhi")
-    
-    message = """Dear User,  
+    username = os.getenv("MAIL_USERNAME")
+    password = os.getenv("MAIL_PASSWORD")
+    if not username or not password:
+        raise RuntimeError("Password reset email is not configured.")
+    yag = yagmail.SMTP(username, password)
 
-    We received a request to reset your password. If you have initiated this request, you can set up a new one by clicking the link below:  
+    message = """Dear User,
+
+    We received a request to reset your password. If you have initiated this request, you can set up a new one by clicking the link below:
 
     {}
 
-    For your security, this link will expire in 15 minutes. 
-    
-    If you didn't request this, please ignore this email. Your password will remain unchanged.  
+    For your security, this link will expire in 15 minutes.
 
-    Stay secure,  
+    If you didn't request this, please ignore this email. Your password will remain unchanged.
+
+    Stay secure,
     Your RubiMed Team""".format(link)
-    
+
     yag.send(to=email, subject="Reset Password Link", contents=message)
 
 #----------------------------------------forgot password----------------------------------------------------------------
@@ -203,10 +229,15 @@ def forgot_password():
             # Generate a token and a reset link
             token = generate_reset_token(email)
             reset_link = url_for("reset_password", token=token, _external=True)
-            
-            # Send the reset email using yagmail
-            send_email(email, reset_link)
-            
+
+            # Send the reset email using configured SMTP credentials.
+            try:
+                send_email(email, reset_link)
+            except RuntimeError:
+                app.logger.exception("Password reset email is not configured")
+                flash("Password reset email is temporarily unavailable.", "danger")
+                return render_template("forgot_password.html")
+
             flash("A password reset link has been sent to your email.", "info")
         else:
             flash("Email not found.", "danger")
@@ -216,9 +247,7 @@ def forgot_password():
 #--------------------------------------------------reset password--------------------------------------------------------------------------
 @app.route("/reset_password/<token>", methods=["GET", "POST"])
 def reset_password(token):
-    print('line1')
     email = confirm_reset_token(token)
-    print('line2')
     if not email:
         flash('The password reset link is invalid or has expired.', 'danger')
         return redirect("/forgot_password")
@@ -229,7 +258,6 @@ def reset_password(token):
 
         if password != confirm_password:
             flash('Passwords do not match.', 'danger')
-            print('confirm error')
             return render_template("reset_password.html", token=token)
 
         hashed_password = generate_password_hash(password)
@@ -240,12 +268,10 @@ def reset_password(token):
             db.commit()
             mycursor.close()
             flash('Your password has been reset successfully.', 'success')
-            print('reset successfully')
             return redirect("/login")
 
         except mysql.connector.Error as err:
             flash('An error occurred while resetting your password.', 'danger')
-            print('an error accurred')
             return render_template("reset_password.html", token=token)
 
     return render_template("reset_password.html", token=token)
@@ -257,18 +283,16 @@ def reset_password(token):
 def dashboard():
     # Check if the doctor is logged in
     if 'doctor_id' not in session:
-        print('doctor id not in session')
-        return redirect("/login")    
+        return redirect("/login")
 
     doctor_id = session['doctor_id']
-    
+
     mycursor = db.cursor(dictionary=True)
-    mycursor.execute("select * from patients where doctor_id = %s", (doctor_id,))       
+    mycursor.execute("select * from patients where doctor_id = %s", (doctor_id,))
     all_patients = mycursor.fetchall()
-    print(all_patients)
     mycursor.close()
     return render_template("dashboard.html", patients=all_patients)
-    
+
 #------------------------------------------------------------------------add patient-------------------------------------------------------------------------------
 @app.route("/add_patient", methods=["GET", "POST"])
 def add_patient():
@@ -282,20 +306,22 @@ def add_patient():
 
         mycursor = db.cursor()
         mycursor.execute("""
-                INSERT INTO patients (doctor_id, first_name, last_name, date_of_birth, gender, contact_info) 
+                INSERT INTO patients (doctor_id, first_name, last_name, date_of_birth, gender, contact_info)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (doctor_id, first_name, last_name, date_of_birth, gender, contact_info))
         db.commit()
         mycursor.close()
         flash("Patient added successfully!", "success")
         return redirect("/dashboard")
-       
+
     return render_template("add_patient.html")
 
 
 #--------------------------------------------------------------------edit patient-----------------------------------------------------------------------------------------------------
 @app.route("/edit_patient/<int:patient_id>", methods=["GET", "POST"])
 def edit_patient(patient_id):
+    if not patient_belongs_to_doctor(patient_id, session['doctor_id']):
+        abort(404)
     if request.method == "POST":
         first_name = request.form["first_name"]
         last_name = request.form["last_name"]
@@ -305,19 +331,21 @@ def edit_patient(patient_id):
 
         mycursor = db.cursor()
         mycursor.execute("""
-                UPDATE patients 
-                SET first_name = %s, last_name = %s, date_of_birth = %s, gender= %s, contact_info = %s 
-                WHERE id = %s
-            """, (first_name, last_name, date_of_birth, gender, contact_info, patient_id))
+                UPDATE patients
+                SET first_name = %s, last_name = %s, date_of_birth = %s, gender= %s, contact_info = %s
+                WHERE id = %s AND doctor_id = %s
+            """, (first_name, last_name, date_of_birth, gender, contact_info, patient_id, session['doctor_id']))
         db.commit()
         mycursor.close()
         flash("Patient updated successfully!", "success")
         return redirect("/dashboard")
-       
+
     mycursor = db.cursor(dictionary=True)
-    mycursor.execute("SELECT * FROM patients WHERE id = %s", (patient_id,))
+    mycursor.execute("SELECT * FROM patients WHERE id = %s AND doctor_id = %s", (patient_id, session['doctor_id']))
     patient = mycursor.fetchone()
     mycursor.close()
+    if not patient:
+        abort(404)
     return render_template("edit_patient.html", patient=patient)
 
 #-----------------------------------------delete patient----------------------------------------------------------------------
@@ -325,7 +353,7 @@ def edit_patient(patient_id):
 @app.route("/delete_patient/<int:patient_id>", methods=["POST"])
 def delete_patient(patient_id):
     mycursor = db.cursor()
-    mycursor.execute("DELETE FROM patients WHERE id = %s", (patient_id,))
+    mycursor.execute("DELETE FROM patients WHERE id = %s AND doctor_id = %s", (patient_id, session['doctor_id']))
     db.commit()
     mycursor.close()
     flash("Patient deleted successfully!", "success")
@@ -336,11 +364,11 @@ def delete_patient(patient_id):
 def view_ehr(patient_id):
     mycursor = db.cursor(dictionary=True)
     mycursor.execute("""
-            SELECT ehr_data.*, patients.first_name, patients.last_name, patients.date_of_birth 
+            SELECT ehr_data.*, patients.first_name, patients.last_name, patients.date_of_birth
             FROM ehr_data
             JOIN patients ON ehr_data.patient_id = patients.id
-            WHERE ehr_data.patient_id = %s
-        """, (patient_id,))
+            WHERE ehr_data.patient_id = %s AND patients.doctor_id = %s
+        """, (patient_id, session['doctor_id']))
     ehr_records = mycursor.fetchall()
     mycursor.close()
 
@@ -349,7 +377,8 @@ def view_ehr(patient_id):
 #---------------------------------------------add ehr_data-----------------------------------------------------------
 @app.route("/add_ehr/<int:patient_id>", methods=["GET", "POST"])
 def add_ehr(patient_id):
-    print(f"Accessing /add_ehr/{patient_id}") #debugging errors 
+    if not patient_belongs_to_doctor(patient_id, session['doctor_id']):
+        abort(404)
     if request.method == "POST":
         diagnosis = request.form["diagnosis"]
         medications = request.form["medications"]
@@ -368,15 +397,21 @@ def add_ehr(patient_id):
         db.commit()
         mycursor.close()
         flash("EHR added successfully!", "success")
-        return redirect(f"/view_ehr/{patient_id}")  # Redirect to view ehr page after adding new record 
-       
+        return redirect(f"/view_ehr/{patient_id}")  # Redirect to view ehr page after adding new record
+
     return render_template("add_ehr.html", patient_id=patient_id)
 
 #-----------------------------------------------------------------------editing EHR data--------------------------------------------------------------------------------------------
-@app.route("/edit_ehr/<int:patient_id>", methods=["GET", "POST"])
-def edit_ehr( patient_id):
+@app.route("/edit_ehr/<int:ehr_id>", methods=["GET", "POST"])
+def edit_ehr(ehr_id):
+    mycursor = db.cursor(dictionary=True)
+    mycursor.execute("SELECT * FROM ehr_data WHERE id = %s AND doctor_id = %s", (ehr_id, session['doctor_id']))
+    ehr_data = mycursor.fetchone()
+    mycursor.close()
+    if not ehr_data:
+        abort(404)
+
     if request.method == "POST":
-        # Get updated EHR data from the form
         diagnosis = request.form["diagnosis"]
         medications = request.form["medications"]
         vital_signs = request.form["vital_signs"]
@@ -386,25 +421,19 @@ def edit_ehr( patient_id):
         date = request.form["date"]
 
         mycursor = db.cursor()
-            # Update the EHR record with the new data
         mycursor.execute("""
-                UPDATE ehr_data 
-                SET diagnosis = %s, medications = %s, vital_signs = %s, immunization_status = %s, 
-                    medical_history = %s, test_results = %s, date = %s 
-                WHERE id = %s
-            """, (diagnosis, medications, vital_signs, immunization_status, medical_history, test_results, date, patient_id))
+            UPDATE ehr_data
+            SET diagnosis = %s, medications = %s, vital_signs = %s, immunization_status = %s,
+                medical_history = %s, test_results = %s, date = %s
+            WHERE id = %s AND doctor_id = %s
+        """, (diagnosis, medications, vital_signs, immunization_status, medical_history,
+              test_results, date, ehr_id, session['doctor_id']))
         db.commit()
         mycursor.close()
         flash("EHR updated successfully!", "success")
-        return redirect(f"/view_ehr/{patient_id}")  # Redirect to view ehr page after updating
-      
-    # Fetch the current EHR data for the given `ehr_id`
-    mycursor = db.cursor(dictionary=True)
-    mycursor.execute("SELECT * FROM ehr_data WHERE id = %s", ( patient_id,))
-    ehr_data = mycursor.fetchone()
-    mycursor.close()
+        return redirect(url_for("view_ehr", patient_id=ehr_data["patient_id"]))
 
-    return render_template("edit_ehr.html", patient_id=patient_id, ehr_data=ehr_data)
+    return render_template("edit_ehr.html", patient_id=ehr_data["patient_id"], ehr_data=ehr_data)
 
 
 #----------------------------------------------------------------deleting EHR data-----------------------------------------------------------------------------------------------------
@@ -412,7 +441,7 @@ def edit_ehr( patient_id):
 def delete_ehr(ehr_id):
     mycursor = db.cursor()
     # Delete the EHR record based on the provided `ehr_id`
-    mycursor.execute("DELETE FROM ehr_data WHERE id = %s", (ehr_id,))
+    mycursor.execute("DELETE FROM ehr_data WHERE id = %s AND doctor_id = %s", (ehr_id, session['doctor_id']))
     db.commit()
     mycursor.close()
     return redirect("/dashboard")  # Redirect to dashboard after deletion#
@@ -426,6 +455,5 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.secret_key = 'super secret key'
-    app.run(debug=True) #runs the code.
-    
+    app.run(debug=os.getenv("FLASK_DEBUG", "false").lower() == "true")
+
