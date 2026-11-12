@@ -45,3 +45,22 @@ jobs:
         run: python -m compileall -q app.py tests
       - name: Run tests
         run: python -m pytest -q
+
+  build:
+    name: Build Docker image
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build RubiMed Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./RubiMed
+          file: ./RubiMed/Dockerfile
+          push: false
+          tags: rubimed:ci
